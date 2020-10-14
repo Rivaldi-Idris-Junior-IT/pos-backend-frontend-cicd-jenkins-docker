@@ -20,61 +20,39 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Testing Progress'){
+            steps{
+                echo "Testing in progress"
+            }
+        }
+
+        stage("Verify Branch"){
+            when {
+                expression {
+                    params.RUNTEST
+                }
+            }
             steps {
                 script {
-                    if (params.Mode == GIT_BRANCH) {
-                        script {
-                            CommitHash = sh(script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
-                            builderDocker = docker.build("aldifarzum/dockerpos-frontend:latest")
-                        }
-                        sh 'echo Validasi branch berhasil'
+                    if (params.Mode == GIT_BRANCH) {                        
+                        sh 'echo Verify Has Confirmed'
                     } else if (params.Mode != GIT_BRANCH) {
                         currentBuild.result = 'ABORTED'
-                        error('Validasi branch gagal …')
+                        error('Validation branch failed …')
                     }
                 }
             }
         }
-
-        stage('Run Testing') {
-            when {
-                expression {
-                    params.RUNTEST
-                }
-            }
-            steps {
-                script {
-                    builderDocker.inside {
-                        sh 'echo passed'
-                    }
-                }
-            }
-        }
-
-        stage('Push Image') {
-            when {
-                expression {
-                    params.RUNTEST
-                }
-            }
-            steps {
-                script {
-                    builderDocker.push("latest")
-                }
-            }
-        }
-
-
-
-        stage('Deploy-deployement') {
+            
+        stage("Pull Image Frontend"){
             when {
                 expression {
                     params.CICD == 'CICD'
                 }
             }
+            
             steps {
-                script {
+                script{
                     if (params.Deploy == 'deployement') {
                         sshPublisher(
                             publishers: [
@@ -83,7 +61,7 @@ pipeline {
                                     verbose: false,
                                     transfers: [
                                         sshTransfer(
-                                            execCommand: 'docker pull aldifarzum/dockerpos-frontend:latest; docker run -d --rm --name frontend -p 8080:80 aldifarzum/dockerpos-frontend:latest',
+                                            execCommand: 'docker pull aldifarzum/dockerpos-frontend:latest;',
                                             execTimeout: 250000,
                                         )
                                     ]
@@ -98,7 +76,7 @@ pipeline {
                                     verbose: false,
                                     transfers: [
                                         sshTransfer(
-                                            execCommand: 'docker pull aldifarzum/dockerpos-frontend:latest; docker kill frontend; docker run -d --rm --name frontend -p 8080:80 aldifarzum/dockerpos-frontend:latest',
+                                            execCommand: 'docker pull aldifarzum/dockerpos-frontend:latest;',
                                             execTimeout: 250000,
                                         )
                                     ]
@@ -107,9 +85,106 @@ pipeline {
                         )
                     }
                 }
+                echo 'Pull image frontend - successfully.'
             }
-
-
         }
+
+        stage("Pull Image Backend"){
+            when {
+                expression {
+                    params.CICD == 'CICD'
+                }
+            }
+            
+            steps {
+                script{
+                    if (params.Deploy == 'deployement') {
+                        sshPublisher(
+                            publishers: [
+                                sshPublisherDesc(
+                                    configName: 'Development',
+                                    verbose: false,
+                                    transfers: [
+                                        sshTransfer(
+                                            execCommand: 'docker pull aldifarzum/dockerpos-backend:latest;',
+                                            execTimeout: 250000,
+                                        )
+                                    ]
+                                )
+                            ]
+                        )
+                    } else if (params.Deploy == 'production') {
+                        sshPublisher(
+                            publishers: [
+                                sshPublisherDesc(
+                                    configName: 'Production',
+                                    verbose: false,
+                                    transfers: [
+                                        sshTransfer(
+                                            execCommand: 'docker pull aldifarzum/dockerpos-backend:latest;',
+                                            execTimeout: 250000,
+                                        )
+                                    ]
+                                )
+                            ]
+                        )
+                    }
+                }
+                echo 'Pull image backend - success.'
+            }
+        }
+        
+        
+
+        stage('Running Compose') {
+            when {
+                expression {
+                    params.RUNTEST
+                }
+            }
+            steps {
+                script{
+                    if (params.Deploy == 'deployement') {
+                        sshPublisher(
+                            publishers: [
+                                sshPublisherDesc(
+                                    configName: 'Development',
+                                    verbose: false,
+                                    transfers: [
+                                        sshTransfer(
+                                            execCommand: 'cd pos-backend-frontend-cicd-jenkins-docker && docker compose up -d; docker ps',
+                                            execTimeout: 250000,
+                                        )
+                                    ]
+                                )
+                            ]
+                        )
+                    } else if (params.Deploy == 'production') {
+                        sshPublisher(
+                            publishers: [
+                                sshPublisherDesc(
+                                    configName: 'Production',
+                                    verbose: false,
+                                    transfers: [
+                                        sshTransfer(
+                                            execCommand: 'cd pos-backend-frontend-cicd-jenkins-docker && docker compose up -d; docker ps',
+                                            execTimeout: 250000,
+                                        )
+                                    ]
+                                )
+                            ]
+                        )
+                    } else {
+                        currentBuild.result = 'ABORTED'
+                        error('Server doesnt exist')
+                    }
+                }
+                echo 'Running compose finish check your server.'
+            }
+        }
+
+
+
+        
     }
 }
