@@ -1,7 +1,7 @@
 version: "3.7"
 services: 
   db:
-    image: "postgres:latest"
+    image: "postgres"
     expose: 
       - 5400
     ports: 
@@ -35,11 +35,11 @@ services:
     networks:
       - netnetwork
     volumes:
-      - /home/ubuntu/DockerConfig/redis.conf:/usr/redis/redis.conf
+      - ./redis/redis.conf:/usr/redis/redis.conf
     command: redis-server /usr/redis/redis.conf
     container_name: redis    
   backend_pos:
-    image: "backend"
+    image: "aldifarzum/dockerpos-backend"
     depends_on:
       - db
       - redis
@@ -66,7 +66,7 @@ services:
         REDIS_HOST: redis
   frontend_pos:
     container_name: "vue_frontend"
-    image: "frontend"
+    image: "aldifarzum/dockerpos-frontend"
     ports:
       - 80:80
     networks:
