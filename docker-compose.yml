@@ -35,8 +35,7 @@ services:
     networks:
       - netnetwork
     volumes:
-      - ./redis/redis.conf:/usr/redis/redis.conf
-    command: redis-server /usr/redis/redis.conf
+      - /usr/redis/redis.conf    
     container_name: redis    
   backend_pos:
     image: "aldifarzum/dockerpos-backend:v1.0.0.2"
