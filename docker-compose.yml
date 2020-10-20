@@ -70,9 +70,7 @@ services:
     ports:
       - 80:80
     networks:
-      - netnetwork
-    depends_on:
-      - backend_pos
+      - netnetwork    
     environment:
      -  VUE_APP_URL=http://3.92.255.131:8181/api
      -  VUE_APP_STATIC_URL=http://3.92.255.131:8181/api/public/upload/
