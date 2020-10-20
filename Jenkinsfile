@@ -152,7 +152,7 @@ pipeline {
                                     verbose: false,
                                     transfers: [
                                         sshTransfer(
-                                            execCommand: 'cd pos-backend-frontend-cicd-jenkins-docker && docker-compose up -d --no-chache; docker ps',
+                                            execCommand: 'cd pos-backend-frontend-cicd-jenkins-docker && docker-compose up -d ; docker ps',
                                             execTimeout: 250000,
                                         )
                                     ]
@@ -167,7 +167,7 @@ pipeline {
                                     verbose: false,
                                     transfers: [
                                         sshTransfer(
-                                            execCommand: 'cd pos-backend-frontend-cicd-jenkins-docker && docker-compose up -d --no-chache; docker ps',
+                                            execCommand: 'cd pos-backend-frontend-cicd-jenkins-docker && docker-compose up -d ; docker ps',
                                             execTimeout: 250000,
                                         )
                                     ]
